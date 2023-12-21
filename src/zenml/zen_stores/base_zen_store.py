@@ -411,6 +411,7 @@ class BaseZenStore(
         server_config = ServerConfiguration.get_server_config()
         deployment_type = server_config.deployment_type
         auth_scheme = server_config.auth_scheme
+        force_client_server_equal_version = server_config.force_client_server_equal_version
         return ServerModel(
             id=GlobalConfiguration().user_id,
             version=zenml.__version__,
@@ -421,6 +422,7 @@ class BaseZenStore(
             if self.secrets_store
             else SecretsStoreType.NONE,
             auth_scheme=auth_scheme,
+            force_client_server_equal_version=force_client_server_equal_version,
         )
 
     def is_local_store(self) -> bool:
