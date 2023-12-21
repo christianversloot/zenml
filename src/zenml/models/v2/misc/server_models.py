@@ -72,9 +72,14 @@ class ServerModel(BaseModel):
         SecretsStoreType.NONE,
         title="The type of secrets store that the server is using.",
     )
-    
+
     auth_scheme: AuthScheme = Field(
         title="The authentication scheme that the server is using.",
+    )
+
+    force_client_server_equal_version: bool = Field(
+        False,
+        title="Flag to indicate whether the client and server versions must be equal.",
     )
 
     def is_local(self) -> bool:
