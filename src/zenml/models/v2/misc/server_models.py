@@ -62,14 +62,17 @@ class ServerModel(BaseModel):
         ServerDeploymentType.OTHER,
         title="The ZenML server deployment type.",
     )
+
     database_type: ServerDatabaseType = Field(
         ServerDatabaseType.OTHER,
         title="The database type that the server is using.",
     )
+
     secrets_store_type: SecretsStoreType = Field(
         SecretsStoreType.NONE,
         title="The type of secrets store that the server is using.",
     )
+    
     auth_scheme: AuthScheme = Field(
         title="The authentication scheme that the server is using.",
     )
