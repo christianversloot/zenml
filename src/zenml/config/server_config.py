@@ -142,6 +142,8 @@ class ServerConfiguration(BaseModel):
 
     rbac_implementation_source: Optional[str] = None
 
+    force_client_server_equal_version: bool = False
+
     _deployment_id: Optional[UUID] = None
 
     @root_validator(pre=True)
