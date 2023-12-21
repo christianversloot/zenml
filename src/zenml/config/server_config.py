@@ -110,6 +110,10 @@ class ServerConfiguration(BaseModel):
             the RBAC interface defined by
             `zenml.zen_server.rbac_interface.RBACInterface`. If not specified,
             RBAC will not be enabled for this server.
+        force_client_server_equal_version: Flag to indicate whether the client
+            and server versions must be equal. If set to `True`, the server will
+            reject requests from clients with a different version than the
+            server.
     """
 
     deployment_type: ServerDeploymentType = ServerDeploymentType.OTHER
