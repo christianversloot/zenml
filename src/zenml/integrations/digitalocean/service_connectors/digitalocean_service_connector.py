@@ -20,11 +20,13 @@ import io
 from typing import Any, List, Optional, Type
 
 from pydantic import Field, SecretStr
+from pydo import Client
 
 from zenml.exceptions import AuthorizationException
 from zenml.integrations.hyperai import (
-    HYPERAI_CONNECTOR_TYPE,
-    HYPERAI_RESOURCE_TYPE,
+    DIGITALOCEAN_CONNECTOR_TYPE,
+    DIGITALOCEAN_BUCKET_RESOURCE_TYPE,
+    DIGITALOCEAN_CONTAINER_REGISTRY_RESOURCE_TYPE,
 )
 from zenml.logger import get_logger
 from zenml.models import (
@@ -44,108 +46,67 @@ logger = get_logger(__name__)
 class DigitalOceanCredentials(AuthenticationConfig):
     """DigitalOcean client authentication credentials."""
 
-    base64_ssh_key: SecretStr = Field(
-        title="SSH key (base64)",
-    )
-    ssh_passphrase: Optional[SecretStr] = Field(
-        default=None,
-        title="SSH key passphrase",
+    digitalocean_token: SecretStr = Field(
+        title="DigitalOcean API token",
     )
 
 
 class DigitalOceanConfiguration(DigitalOceanCredentials):
     """DigitalOcean client configuration."""
-
-    hostnames: List[str] = Field(
-        title="Hostnames of the supported DigitalOcean instances.",
-    )
-
-    username: str = Field(
-        title="Username to use to connect to the DigitalOcean instance.",
-    )
+    pass
 
 
 class DigitalOceanAuthenticationMethods(StrEnum):
     """DigitalOcean Authentication methods."""
 
-    RSA_KEY_OPTIONAL_PASSPHRASE = "rsa-key"
-    DSA_KEY_OPTIONAL_PASSPHRASE = "dsa-key"
-    ECDSA_KEY_OPTIONAL_PASSPHRASE = "ecdsa-key"
-    ED25519_KEY_OPTIONAL_PASSPHRASE = "ed25519-key"
+    API_TOKEN = "api-token"
 
 
-HYPERAI_SERVICE_CONNECTOR_TYPE_SPEC = ServiceConnectorTypeModel(
+DIGITALOCEAN_SERVICE_CONNECTOR_TYPE_SPEC = ServiceConnectorTypeModel(
     name="DigitalOcean Service Connector",
-    connector_type=HYPERAI_CONNECTOR_TYPE,
+    connector_type=DIGITALOCEAN_CONNECTOR_TYPE,
     description="""
-The ZenML DigitalOcean Service Connector allows authenticating to DigitalOcean (hyperai.ai)
-GPU equipped instances.
+The ZenML DigitalOcean Service Connector allows authenticating to DigitalOcean resources.
 
-This connector provides an SSH connection to your DigitalOcean instance, which can be
-used to run ZenML pipelines.
-
-The instance must be configured to allow SSH connections from the ZenML server.
-Docker and Docker Compose must be installed on the DigitalOcean instance. If you want
-to use scheduled pipeline runs, also ensure that a working cron daemon is installed
-and running on the DigitalOcean instance.
+This connector provides an authenticated `pydo` client which allows users to interact
+with DigitalOcean resources.
 """,
-    logo_url="https://public-flavor-logos.s3.eu-central-1.amazonaws.com/connectors/hyperai/hyperai.png",
-    emoji=":robot_face:",
+    logo_url="https://public-flavor-logos.s3.eu-central-1.amazonaws.com/connectors/digitalocean/digitalocean.png",
+    emoji=":ocean:",
     auth_methods=[
         AuthenticationMethodModel(
-            name="RSA key with optional passphrase",
-            auth_method=DigitalOceanAuthenticationMethods.RSA_KEY_OPTIONAL_PASSPHRASE,
+            name="API token",
+            auth_method=DigitalOceanAuthenticationMethods.API_TOKEN,
             description="""
-Use an RSA private key to authenticate with a DigitalOcean instance. The key may be
-encrypted with a passphrase. If the key is encrypted, the passphrase must be
-provided. Make sure to provide the key as a Base64 encoded string.
-""",
-            config_class=DigitalOceanConfiguration,
-        ),
-        AuthenticationMethodModel(
-            name="DSA/DSS key with optional passphrase",
-            auth_method=DigitalOceanAuthenticationMethods.DSA_KEY_OPTIONAL_PASSPHRASE,
-            description="""
-Use a DSA/DSS private key to authenticate with a DigitalOcean instance. The key may be
-encrypted with a passphrase. If the key is encrypted, the passphrase must be
-provided. Make sure to provide the key as a Base64 encoded string.
-""",
-            config_class=DigitalOceanConfiguration,
-        ),
-        AuthenticationMethodModel(
-            name="ECDSA key with optional passphrase",
-            auth_method=DigitalOceanAuthenticationMethods.ECDSA_KEY_OPTIONAL_PASSPHRASE,
-            description="""
-Use an ECDSA private key to authenticate with a DigitalOcean instance. The key may be
-encrypted with a passphrase. If the key is encrypted, the passphrase must be
-provided. Make sure to provide the key as a Base64 encoded string.
-""",
-            config_class=DigitalOceanConfiguration,
-        ),
-        AuthenticationMethodModel(
-            name="Ed25519 key with optional passphrase",
-            auth_method=DigitalOceanAuthenticationMethods.ED25519_KEY_OPTIONAL_PASSPHRASE,
-            description="""
-Use an Ed25519 private key to authenticate with a DigitalOcean instance. The key may be
-encrypted with a passphrase. If the key is encrypted, the passphrase must be
-provided. Make sure to provide the key as a Base64 encoded string.
+Use a DigitalOcean API token to authenticate with a DigitalOcean instance.
 """,
             config_class=DigitalOceanConfiguration,
         ),
     ],
     resource_types=[
         ResourceTypeModel(
-            name="DigitalOcean instance",
-            resource_type=HYPERAI_RESOURCE_TYPE,
+            name="DigitalOcean Spaces bucket",
+            resource_type=DIGITALOCEAN_BUCKET_RESOURCE_TYPE,
             description="""
-Allows users to access a DigitalOcean instance as a resource. When used by
-connector consumers, they are provided a pre-authenticated SSH client
-instance.
+Allows users to interact with DigitalOcean Spaces buckets, which can be used as
+Artifacts Stores in ZenML.
 """,
             auth_methods=DigitalOceanAuthenticationMethods.values(),
             supports_instances=True,
-            logo_url="https://public-flavor-logos.s3.eu-central-1.amazonaws.com/connectors/hyperai/hyperai.png",
-            emoji=":robot_face:",
+            logo_url="https://public-flavor-logos.s3.eu-central-1.amazonaws.com/connectors/digitalocean/digitalocean.png",
+            emoji=":ocean:",
+        ),
+        ResourceTypeModel(
+            name="DigitalOcean Container Registry",
+            resource_type=DIGITALOCEAN_CONTAINER_REGISTRY_RESOURCE_TYPE,
+            description="""
+Allows users to interact with DigitalOcean Container Registries, which can be used
+as Container Registries in ZenML.
+""",
+            auth_methods=DigitalOceanAuthenticationMethods.values(),
+            supports_instances=True,
+            logo_url="https://public-flavor-logos.s3.eu-central-1.amazonaws.com/connectors/digitalocean/digitalocean.png",
+            emoji=":ocean:",
         ),
     ],
 )
@@ -163,126 +124,61 @@ class DigitalOceanServiceConnector(ServiceConnector):
         Returns:
             The service connector specification.
         """
-        return HYPERAI_SERVICE_CONNECTOR_TYPE_SPEC
+        return DIGITALOCEAN_SERVICE_CONNECTOR_TYPE_SPEC
 
-    def _paramiko_key_type_given_auth_method(self) -> Type[paramiko.PKey]:
-        """Get the Paramiko key type given the authentication method.
-
-        Returns:
-            The Paramiko key type.
-
-        Raises:
-            ValueError: If the authentication method is invalid.
-        """
-        mapping = {
-            DigitalOceanAuthenticationMethods.RSA_KEY_OPTIONAL_PASSPHRASE: paramiko.RSAKey,
-            DigitalOceanAuthenticationMethods.DSA_KEY_OPTIONAL_PASSPHRASE: paramiko.DSSKey,
-            DigitalOceanAuthenticationMethods.ECDSA_KEY_OPTIONAL_PASSPHRASE: paramiko.ECDSAKey,
-            DigitalOceanAuthenticationMethods.ED25519_KEY_OPTIONAL_PASSPHRASE: paramiko.Ed25519Key,
-        }
-
-        try:
-            return mapping[DigitalOceanAuthenticationMethods(self.auth_method)]
-        except KeyError:
-            raise ValueError(
-                f"Invalid authentication method: {self.auth_method}"
-            )
-
-    def _create_paramiko_client(
-        self, hostname: str
-    ) -> paramiko.client.SSHClient:
-        """Create a Paramiko SSH client based on the configuration.
+    def _create_pydo_client(
+        self, api_token: str
+    ) -> Client:
+        """Create a pydo Client based on the configuration.
 
         Args:
-            hostname: The hostname of the DigitalOcean instance.
+            api_token: The DigitalOcean API token.
 
         Returns:
-            A Paramiko SSH client.
+            A pydo Client.
 
         Raises:
             AuthorizationException: If the client cannot be created.
         """
-        if self.config.ssh_passphrase is None:
-            ssh_passphrase = None
-        else:
-            ssh_passphrase = self.config.ssh_passphrase.get_secret_value()
-
-        # Connect to the DigitalOcean instance
+        # Connect to the DigitalOcean API
         try:
-            # Convert the SSH key from base64 to string
-            base64_key_value = self.config.base64_ssh_key.get_secret_value()
-            ssh_key = base64.b64decode(base64_key_value).decode("utf-8")
-            paramiko_key = None
-
-            with io.StringIO(ssh_key) as f:
-                paramiko_key = self._paramiko_key_type_given_auth_method().from_private_key(
-                    f, password=ssh_passphrase
-                )
-
-            # Trim whitespace from the IP address
-            hostname = hostname.strip()
-
-            paramiko_client = paramiko.client.SSHClient()
-            paramiko_client.set_missing_host_key_policy(
-                paramiko.AutoAddPolicy()  # nosec
-            )
-            paramiko_client.connect(
-                hostname=hostname,
-                username=self.config.username,
-                pkey=paramiko_key,
-                timeout=30,
-            )
-
-            return paramiko_client
-
-        except paramiko.ssh_exception.BadHostKeyException as e:
-            logger.error("Bad host key: %s", e)
-        except paramiko.ssh_exception.AuthenticationException as e:
-            logger.error("Authentication failed: %s", e)
-        except paramiko.ssh_exception.SSHException as e:
-            logger.error(
-                "SSH error: %s. A common cause for this error is selection of the wrong key type in your service connector.",
-                e,
-            )
+            return Client(token=api_token)
         except Exception as e:
             logger.error(
-                "Unknown error while connecting to DigitalOcean instance: %s. Please check your network connection, IP address, and authentication details.",
+                "Unknown error while creating pydo client for DigitalOcean: %s",
                 e,
             )
+            raise AuthorizationException(
+                "Could not create pydo client for DigitalOcean."
+            )
 
-        raise AuthorizationException(
-            "Could not create SSH client for DigitalOcean instance."
-        )
-
-    def _authorize_client(self, hostname: str) -> None:
-        """Verify that the client can authenticate with the DigitalOcean instance.
+    def _authorize_client(self, api_token: str) -> None:
+        """Verify that the client can authenticate with DigitalOcean.
 
         Args:
-            hostname: The hostname of the DigitalOcean instance.
+            api_token: The DigitalOcean API token.
         """
-        logger.info("Verifying connection to DigitalOcean instance...")
-
-        paramiko_client = self._create_paramiko_client(hostname)
-        paramiko_client.close()
+        logger.info("Verifying connection to DigitalOcean...")
+        
+        self._create_pydo_client(api_token)
 
     def _connect_to_resource(
         self,
         **kwargs: Any,
     ) -> Any:
-        """Connect to a DigitalOcean instance. Returns an authenticated SSH client.
+        """Connect to DigitalOcean. Returns a pydo client.
 
         Args:
             kwargs: Additional implementation specific keyword arguments to pass
                 to the session or client constructor.
 
         Returns:
-            An authenticated Paramiko SSH client.
+            A pydo client.
         """
-        logger.info("Connecting to DigitalOcean instance...")
+        logger.info("Connecting to DigitalOcean...")
         assert self.resource_id is not None
-
-        paramiko_client = self._create_paramiko_client(self.resource_id)
-        return paramiko_client
+        
+        return self._create_pydo_client(self.config.digitalocean_token.get_secret_value())
 
     def _configure_local_client(
         self,
@@ -299,7 +195,7 @@ class DigitalOceanServiceConnector(ServiceConnector):
                 connector.
         """
         raise NotImplementedError(
-            "There is no local client for the DigitalOcean connector."
+            "There is no local client for the DigitalOcean service connector."
         )
 
     @classmethod
@@ -330,7 +226,7 @@ class DigitalOceanServiceConnector(ServiceConnector):
                 is not supported.
         """
         raise NotImplementedError(
-            "Auto-configuration is not supported by the DigitalOcean connector."
+            "Auto-configuration is not supported by the DigitalOcean service connector."
         )
 
     def _verify(
@@ -352,20 +248,6 @@ class DigitalOceanServiceConnector(ServiceConnector):
             ValueError: If the resource ID is not in the list of configured
                 hostnames.
         """
-        if resource_id:
-            if resource_id not in self.config.hostnames:
-                raise ValueError(
-                    f"The supplied hostname '{resource_id}' is not in the list "
-                    f"of configured hostnames: {self.config.hostnames}. Please "
-                    f"check your configuration."
-                )
-            hostnames = [resource_id]
-        else:
-            hostnames = self.config.hostnames
-
-        resources = []
-        for hostname in hostnames:
-            self._authorize_client(hostname)
-            resources.append(hostname)
-
-        return resources
+        raise NotImplementedError(
+            "TODO: Implement DigitalOceanServiceConnector._verify"
+        )
