@@ -23,7 +23,7 @@ from pydantic import Field, SecretStr
 from pydo import Client
 
 from zenml.exceptions import AuthorizationException
-from zenml.integrations.hyperai import (
+from zenml.integrations.digitalocean import (
     DIGITALOCEAN_CONNECTOR_TYPE,
     DIGITALOCEAN_BUCKET_RESOURCE_TYPE,
     DIGITALOCEAN_CONTAINER_REGISTRY_RESOURCE_TYPE,
