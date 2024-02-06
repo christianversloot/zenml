@@ -87,10 +87,12 @@ with DigitalOcean resources.
     emoji=":ocean:",
     auth_methods=[
         AuthenticationMethodModel(
-            name="API token",
+            name="API token and Spaces credentials",
             auth_method=DigitalOceanAuthenticationMethods.API_TOKEN,
             description="""
-Use a DigitalOcean API token to authenticate with a DigitalOcean instance.
+Use a DigitalOcean API token to authenticate with DigitalOcean resources. Because DigitalOcean
+Spaces are configured differently, you also need to provide the access and secret keys for the
+Spaces bucket.
 """,
             config_class=DigitalOceanConfiguration,
         ),
