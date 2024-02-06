@@ -13,7 +13,7 @@
 #  permissions and limitations under the License.
 """DigitalOcean Service Connector."""
 
-from zenml.integrations.DigitalOcean.service_connectors.digitalocean_service_connector import (
+from zenml.integrations.digitalocean.service_connectors.digitalocean_service_connector import (
     DigitalOceanServiceConnector,
 )
 
