@@ -20,6 +20,7 @@ from zenml.stack import Flavor
 
 # Service connector constants
 DIGITALOCEAN_CONNECTOR_TYPE = "digitalocean"
+DIGITALOCEAN_CONTAINER_REGISTRY_FLAVOR = "digitalocean"
 DIGITALOCEAN_BUCKET_RESOURCE_TYPE = "digitalocean-bucket"
 DIGITALOCEAN_CONTAINER_REGISTRY_RESOURCE_TYPE = "digitalocean-container-registry"
 
