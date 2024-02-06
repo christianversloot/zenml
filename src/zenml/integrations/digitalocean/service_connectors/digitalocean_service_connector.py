@@ -65,10 +65,7 @@ class DigitalOceanCredentials(AuthenticationConfig):
 class DigitalOceanConfiguration(DigitalOceanCredentials):
     """DigitalOcean client configuration."""
 
-    spaces_region = Field(
-        title="DigitalOcean Spaces region",
-        description="The DigitalOcean Spaces region, such as ams3.",
-    )
+    spaces_region: str = "ams3"
 
 
 class DigitalOceanAuthenticationMethods(StrEnum):
