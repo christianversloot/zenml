@@ -371,3 +371,6 @@ class DigitalOceanServiceConnector(ServiceConnector):
                     msg = f"failed to fetch S3 bucket {bucket_name}: {e}"
                     logger.error(msg)
                     raise AuthorizationException(msg) from e
+                
+        # Return nothing by default
+        return []
