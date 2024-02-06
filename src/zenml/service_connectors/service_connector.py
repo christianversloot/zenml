@@ -1274,6 +1274,7 @@ class ServiceConnector(BaseModel, metaclass=ServiceConnectorMeta):
                     # We stop on a global failure
                     break
             except Exception as exc:
+                print(exc)
                 error = (
                     f"connector{name_msg} verification failed with "
                     f"unexpected error: {exc}"
