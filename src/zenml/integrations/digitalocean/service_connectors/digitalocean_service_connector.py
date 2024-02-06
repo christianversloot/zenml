@@ -46,8 +46,19 @@ logger = get_logger(__name__)
 class DigitalOceanCredentials(AuthenticationConfig):
     """DigitalOcean client authentication credentials."""
 
-    digitalocean_token: SecretStr = Field(
+    api_token: SecretStr = Field(
         title="DigitalOcean API token",
+        description="The API token for DigitalOcean resources."
+    )
+
+    spaces_access_key: SecretStr = Field(
+        title="DigitalOcean Spaces access key",
+        description="The access key for the DigitalOcean Spaces bucket.",
+    )
+
+    spaces_secret_key: SecretStr = Field(
+        title="DigitalOcean Spaces secret key",
+        description="The secret key for the DigitalOcean Spaces bucket.",
     )
 
 
@@ -178,7 +189,7 @@ class DigitalOceanServiceConnector(ServiceConnector):
         logger.info("Connecting to DigitalOcean...")
         assert self.resource_id is not None
         
-        return self._create_pydo_client(self.config.digitalocean_token.get_secret_value())
+        return self._create_pydo_client(self.config.api_token.get_secret_value())
 
     def _configure_local_client(
         self,
@@ -237,9 +248,17 @@ class DigitalOceanServiceConnector(ServiceConnector):
         """Verify that a connection can be established to the DigitalOcean instance.
 
         Args:
-            resource_type: The type of resource to verify. Must be set to the
-                Docker resource type.
-            resource_id: The DigitalOcean instance to verify.
+            resource_type: The type of the resource to verify. If omitted and
+                if the connector supports multiple resource types, the
+                implementation must verify that it can authenticate and connect
+                to any and all of the supported resource types.
+            resource_id: The ID of the resource to connect to. Omitted if a
+                resource type is not specified. It has the same value as the
+                default resource ID if the supplied resource type doesn't
+                support multiple instances. If the supplied resource type does
+                allows multiple instances, this parameter may still be omitted
+                to fetch a list of resource IDs identifying all the resources
+                of the indicated type that the connector can access.
 
         Returns:
             The resource ID if the connection can be established.
@@ -248,6 +267,19 @@ class DigitalOceanServiceConnector(ServiceConnector):
             ValueError: If the resource ID is not in the list of configured
                 hostnames.
         """
+        # Get client
+        client = self._create_pydo_client(
+            self.config.api_token.get_secret_value()
+        )
+
+        # Verify the resource type
+        if not resource_type:
+            return []
+        
+        # Verify if bucket resource type
+        if resource_type == DIGITALOCEAN_BUCKET_RESOURCE_TYPE:
+            assert resource_id is not None
+
         raise NotImplementedError(
             "TODO: Implement DigitalOceanServiceConnector._verify"
         )

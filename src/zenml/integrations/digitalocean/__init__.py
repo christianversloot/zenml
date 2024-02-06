@@ -30,7 +30,8 @@ class DigitalOceanIntegration(Integration):
 
     NAME = DIGITALOCEAN
     REQUIREMENTS = [
-        "pydo>=0.2.0"
+        "pydo>=0.2.0",
+        "boto3<=1.26.76",
     ]
 
     @classmethod
