@@ -64,7 +64,11 @@ class DigitalOceanCredentials(AuthenticationConfig):
 
 class DigitalOceanConfiguration(DigitalOceanCredentials):
     """DigitalOcean client configuration."""
-    pass
+
+    spaces_region = Field(
+        title="DigitalOcean Spaces region",
+        description="The DigitalOcean Spaces region, such as ams3.",
+    )
 
 
 class DigitalOceanAuthenticationMethods(StrEnum):
@@ -239,6 +243,56 @@ class DigitalOceanServiceConnector(ServiceConnector):
         raise NotImplementedError(
             "Auto-configuration is not supported by the DigitalOcean service connector."
         )
+    
+    def _parse_s3_resource_id(self, resource_id: str) -> str:
+        """Validate and convert an S3 resource ID to an S3 bucket name.
+
+        Args:
+            resource_id: The resource ID to convert.
+
+        Returns:
+            The S3 bucket name.
+
+        Raises:
+            ValueError: If the provided resource ID is not a valid S3 bucket
+                name, ARN or URI.
+        """
+        # The resource ID could mean different things:
+        #
+        # - an S3 bucket ARN
+        # - an S3 bucket URI
+        # - the S3 bucket name
+        #
+        # We need to extract the bucket name from the provided resource ID
+        bucket_name: Optional[str] = None
+        if re.match(
+            r"^arn:aws:s3:::[a-z0-9-]+(/.*)*$",
+            resource_id,
+        ):
+            # The resource ID is an S3 bucket ARN
+            bucket_name = resource_id.split(":")[-1].split("/")[0]
+        elif re.match(
+            r"^s3://[a-z0-9-]+(/.*)*$",
+            resource_id,
+        ):
+            # The resource ID is an S3 bucket URI
+            bucket_name = resource_id.split("/")[2]
+        elif re.match(
+            r"^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$",
+            resource_id,
+        ):
+            # The resource ID is the S3 bucket name
+            bucket_name = resource_id
+        else:
+            raise ValueError(
+                f"Invalid resource ID for an S3 bucket: {resource_id}. "
+                f"Supported formats are:\n"
+                f"S3 bucket ARN: arn:aws:s3:::<bucket-name>\n"
+                f"S3 bucket URI: s3://<bucket-name>\n"
+                f"S3 bucket name: <bucket-name>"
+            )
+
+        return bucket_name
 
     def _verify(
         self,
@@ -280,6 +334,35 @@ class DigitalOceanServiceConnector(ServiceConnector):
         if resource_type == DIGITALOCEAN_BUCKET_RESOURCE_TYPE:
             assert resource_id is not None
 
-        raise NotImplementedError(
-            "TODO: Implement DigitalOceanServiceConnector._verify"
-        )
+            import boto3
+            from botocore.exceptions import ClientError, BotoCoreError
+            # Create an S3 client
+            s3 = boto3.client(
+                "s3",
+                endpoint_url=f"https://{self.config.spaces_region}.digitaloceanspaces.com",
+                aws_access_key_id=self.config.spaces_access_key.get_secret_value(),
+                aws_secret_access_key=self.config.spaces_secret_key.get_secret_value(),
+            )
+
+            if not resource_id:
+                # List all S3 buckets
+                try:
+                    response = s3.list_buckets()
+                except (ClientError, BotoCoreError) as e:
+                    msg = f"failed to list S3 buckets: {e}"
+                    logger.error(msg)
+                    raise AuthorizationException(msg) from e
+
+                return [
+                    f"s3://{bucket['Name']}" for bucket in response["Buckets"]
+                ]
+            else:
+                # Check if the specified S3 bucket exists
+                bucket_name = self._parse_s3_resource_id(resource_id)
+                try:
+                    s3.head_bucket(Bucket=bucket_name)
+                    return [resource_id]
+                except (ClientError, BotoCoreError) as e:
+                    msg = f"failed to fetch S3 bucket {bucket_name}: {e}"
+                    logger.error(msg)
+                    raise AuthorizationException(msg) from e
