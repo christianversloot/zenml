@@ -321,9 +321,9 @@ class DigitalOceanServiceConnector(ServiceConnector):
                 hostnames.
         """
         # Get client
-        client = self._create_pydo_client(
-            self.config.api_token.get_secret_value()
-        )
+        # client = self._create_pydo_client(
+        #     self.config.api_token.get_secret_value()
+        # )
 
         # Verify the resource type
         if not resource_type:
