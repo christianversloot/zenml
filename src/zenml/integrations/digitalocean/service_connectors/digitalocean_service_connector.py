@@ -329,6 +329,12 @@ class DigitalOceanServiceConnector(ServiceConnector):
         if not resource_type:
             return []
         
+        # Verify if container registry resource type
+        if resource_type == DIGITALOCEAN_CONTAINER_REGISTRY_RESOURCE_TYPE:
+            assert resource_id is not None
+            
+            return []
+        
         # Verify if bucket resource type
         if resource_type == DIGITALOCEAN_BUCKET_RESOURCE_TYPE:
             assert resource_id is not None
