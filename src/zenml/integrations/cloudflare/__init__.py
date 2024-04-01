@@ -22,7 +22,7 @@ from zenml.integrations.integration import Integration
 from zenml.stack import Flavor
 
 CLOUDFLARE_ARTIFACT_STORE_FLAVOR = "cloudflare"
-
+R2_RESOURCE_TYPE = "r2-bucket"
 
 class CloudFlareIntegration(Integration):
     """Definition of CloudFlare integration for ZenML."""
@@ -43,6 +43,11 @@ class CloudFlareIntegration(Integration):
         "s3fs>2022.3.0",
         "boto3",
     ]
+
+    @staticmethod
+    def activate() -> None:
+        """Activate the CloudFlare integration."""
+        from zenml.integrations.cloudflare import service_connectors  # noqa
 
     @classmethod
     def flavors(cls) -> List[Type[Flavor]]:
